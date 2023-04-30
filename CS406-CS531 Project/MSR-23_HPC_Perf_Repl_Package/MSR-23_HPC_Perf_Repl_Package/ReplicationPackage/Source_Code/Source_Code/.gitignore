@@ -1,0 +1,10 @@
+*target*
+*.class
+
+bin/**
+tmp/**
+tmp/**/*
+*.tmp
+*.bak
+*.swp
+*~.nib
