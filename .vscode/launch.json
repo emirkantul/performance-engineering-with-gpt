@@ -1,0 +1,28 @@
+{
+	// Use IntelliSense to learn about possible attributes.
+	// Hover to view descriptions of existing attributes.
+	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "gpt-flask-app",
+			"type": "python",
+			"request": "launch",
+			"cwd": "${workspaceFolder}/gpt-tool",
+			"program": "${workspaceFolder}/gpt-tool/app.py",
+			"python": "${workspaceFolder}/gpt-tool/.venv/bin/python",
+			"console": "integratedTerminal",
+			"justMyCode": true
+		}
+		{
+			"name": "ssh-app",
+			"type": "python",
+			"request": "launch",
+			"cwd": "${workspaceFolder}/gpt-tool",
+			"program": "${workspaceFolder}/gpt-tool/ssh.py",
+			"python": "${workspaceFolder}/gpt-tool/.venv/bin/python",
+			"console": "integratedTerminal",
+			"justMyCode": true
+		}
+	]
+}
