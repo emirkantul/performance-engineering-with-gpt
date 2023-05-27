@@ -1,129 +1,167 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<title>Code Performance Analysis</title>
-		<link
-			rel="stylesheet"
-			href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
-		/>
-		<link
-			rel="stylesheet"
-			href="{{ url_for('static', filename='styles.css') }}"
-		/>
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-		<script>
-			$(document).ready(function () {
-				$("form").on("submit", function () {
-					$("#loading").show();
-				});
-			});
-		</script>
-        <style>
-            /* ... other styles ... */
-            .loading-container {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background-color: rgba(0, 0, 0, 0.5);
-                z-index: 9999;
-            }
-        </style>
-	</head>
-	<body>
-        <div id="loading" class="loading-container" style="display: none;">
-            <div class="spinner-border text-primary" role="status">
-                <span class="sr-only">Loading...</span>
+<head>
+    <title>Code Performance Analysis</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"/>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("form").on("submit", function () {
+                $("#loading").show();
+                // Enable the 'Fix' button after receiving the results
+                $("#fixBtn").prop("disabled", false);
+            });
+        });
+    </script>
+    <style>
+        /* ... other styles ... */
+        .loading-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+        }
+
+        .container {
+            padding-left: 0;
+            padding-right: 0;
+            margin-left: 2%;
+            margin-right: 2%;
+			margin-top: 2%;
+			margin-bottom: 2%;
+        }
+    </style>
+</head>
+<body>
+<div id="loading" class="loading-container" style="display: none;">
+    <div class="spinner-border text-primary" role="status">
+        <span class="sr-only">Loading...</span>
+    </div>
+</div>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-5" style="margin:1%">
+            <div class="input-column">
+                <h2 class="header">Put your code here</h2>
+                <form method="POST">
+                    <textarea
+                        name="code"
+                        rows="20"
+                        class="form-control"
+                        required
+                    ></textarea>
+                    </br>
+                    <h4 class="header">CPU Architecture</h4>
+                    <input
+                        type="text"
+                        name="cpu"
+                        class="form-control"
+                        placeholder="Optional"
+                    />
+                    </br>
+                    <h4 class="header">GPU Architecture</h4>
+                    <input
+                        type="text"
+                        name="gpu"
+                        class="form-control"
+                        placeholder="Optional"
+                    />
+                    </br>
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="runnable" name="runnable" value="runnable">
+                            <label class="form-check-label" for="runnable">
+                                Is runnable?
+                            </label>
+                        </div>
+                        <small class="form-text text-muted">(This will let us run your code and see the "perf" results.)</small>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="is_cuda" name="is_cuda" value="is_cuda">
+                            <label class="form-check-label" for="runnable">
+                                Is cuda?
+                            </label>
+                        </div>
+                        <small class="form-text text-muted">(Is this a .cu code? So we can run gpu metrics.)</small>
+                    </div>
+                    <h5 class="header">Additional Commands</h5>
+                    <div class="form-check" style="margin-bottom: 2%;">
+                        <input
+                            type="text"
+                            name="additional_commands"
+                            class="form-control"
+                            placeholder="Optional"
+                        />
+                        <small class="form-text text-muted">(Add additional commands to run while compiling your code. -fopenmp is already included)</small>
+                    </div>
+                    <input
+                        type="submit"
+                        value="Analyze"
+                        class="btn btn-primary btn-block"
+                    />
+                </form>
             </div>
         </div>
-		<div class="container">
-			<div class="row">
-				<div class="col-md-6">
-					<h2 class="header">Put your code here</h2>
-					<form method="POST">
-						<textarea
-							name="code"
-							rows="20"
-							class="form-control"
-							required
-						></textarea>
-                        </br>
-						<h4 class="header">CPU Architecture</h3>
-						<input
-							type="text"
-							name="cpu_arch"
-							class="form-control"
-							placeholder="Optional"
-						/>
-                    </br>
-                    <h4 class="header">GPU Architecture</h3>
-						<input
-							type="text"
-							name="gpu_arch"
-							class="form-control"
-							placeholder="Optional"
-						/>
-                    </br>
-                    <h4 class="header">Perf Results</h3>
-						<input
-							type="text"
-							name="perf_results"
-							class="form-control"
-							placeholder="Optional"
-						/>
-						<br />
-						<input
-							type="submit"
-							value="Analyze"
-							class="btn btn-primary btn-block"
-						/>
-					</form>
-				</div>
-				<div class="col-md-6">
-					<h2 class="header">Performance Analysis:</h2>
-					{% if chat_response %}
-                </br>
-                <h4 class="header">Computational Expensive Operation</h3>
-					<textarea rows="2" class="form-control" readonly>
-{{ chat_response["Computational Expensive Operation"] }}</textarea
-					>
-                </br>
-                <h4 class="header">Inefficient Data Structures</h3>
-					<textarea rows="2" class="form-control" readonly>
-{{ chat_response["Inefficient Data Structures"] }}</textarea
-					>
-                </br>
-                <h4 class="header">Not Using Function Inlining</h3>
-					<textarea rows="2" class="form-control" readonly>
-{{ chat_response["Not Using Function Inlining"] }}</textarea
-					>
-                </br>
-                <h4 class="header">Inefficient Concurrency Control</h3>
-					<textarea rows="2" class="form-control" readonly>
-{{ chat_response["Inefficient Concurrency Control"] }}</textarea
-					>
-                </br>
-                <h4 class="header">Missing SIMD Parallelism</h3>
-					<textarea rows="2" class="form-control" readonly>
-{{ chat_response["Missing SIMD Parallelism"] }}</textarea
-					>
-                </br>
-                <h4 class="header">Missing GPU Parallelism</h3>
-					<textarea rows="2" class="form-control" readonly>
-{{ chat_response["Missing GPU Parallelism"] }}</textarea
-					>
-                </br>
-                <h4 class="header">Missing Task Parallelism</h3>
-					<textarea rows="2" class="form-control" readonly>
-{{ chat_response["Missing Task Parallelism"] }}</textarea
-					>
-					{% endif %}
-				</div>
-			</div>
-		</div>
-	</body>
+        <div class="col-md-6" style="margin:1%">
+            <div class="results-column">
+                <h2 class="header">Performance Analysis:</h2>
+                {% if resp %}
+                <br>
+                {% for issue, value in resp["performance_issues"].items() %}
+                    <div class="issue-section">
+                        <h4 class="header">{{ issue }}</h4>
+                        <textarea rows="2" class="form-control" readonly>{{ value }}</textarea>
+                        <br>
+                    </div>
+                {% endfor %}
+                {% if resp["architecture_recommendations"] %}
+                <h4 class="header">Architecture Recommendations</h4>
+                <textarea class="form-control" readonly style="height: auto; min-height: 400px;">
+                    {{ resp["architecture_recommendations"] }}</textarea>
+                <br>
+                {% endif %}
+                {% if resp["runnable"] %}
+                <h4 class="header">Perf Results</h4>
+                <table class="table">
+                    <tbody>
+                        {% for key, value in resp["perf_results"].items() %}
+                        <tr>
+                            <td>{{ key }}</td>
+                            <td><pre><code>{{ value }}</code></pre></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <br>
+                <h4 class="header">Perf Assessment</h4>
+                <textarea class="form-control" readonly style="height: auto; min-height: 400px;">
+                    {{ resp["perf_assessment"] }}</textarea>
+                <br>
+                {% endif %}
+                {% if resp["is_cuda"] %}
+                <h4 class="header">Nvprof Results</h4>
+                <textarea class="form-control" readonly style="height: auto; min-height: 400px;">
+                    {{ resp["nvprof_results"] }}</textarea>
+                <br>
+                <h4 class="header">Nvprof Assessment</h4>
+                <textarea class="form-control" readonly style="height: auto; min-height: 400px;">
+                    {{ resp["nvprof_assessment"] }}</textarea>
+                <br>
+                {% endif %}
+                <div class="fixed-top d-flex justify-content-end align-items-center" style="height: 50%;">
+                    <button id="fixBtn" class="btn btn-success mr-5" onclick="location.href='/fix'">Fix</button>
+                </div>
+                {% endif %}
+            </div>
+        </div>	
+    </div>
+</div>
+</body>
 </html>
